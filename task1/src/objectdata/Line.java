@@ -31,8 +31,14 @@ public class Line {
      * Calculates and sets the parameters k (directive) and q (y-intercepts) of the line.
      */
     public void calculate() {
-        this.k = (this.end.y - this.start.y) / (this.end.x - this.start.x);
-        this.q = this.start.y - this.k * this.start.x;
+        final double EPSILON = 1e-10; // malá hodnota pro porovnání s nulou
+        if (Math.abs(end.x - start.x) < EPSILON) { // pokud je x-rozdíl velmi malý, považujeme linii za vertikální
+            this.k = Double.POSITIVE_INFINITY; // nebo jiná reprezentace nekonečné směrnice
+            this.q = start.x; // vertikální linie nemá y-odseček, takže použijeme x-souřadnici
+        } else {
+            this.k = (end.y - start.y) / (end.x - start.x);
+            this.q = start.y - this.k * start.x;
+        }
     }
 
     /**
@@ -40,11 +46,9 @@ public class Line {
      */
     public void truncate() {
         if (this.end.x != this.start.x) {
-            // Zkrátíme x souřadnici koncového bodu, pokud není vertikální
-            double deltaY = k; // Změna v y vzhledem ke změně v x
+            double deltaY = k;
             this.end = new Point2D(this.end.x - 1, this.end.y - deltaY);
         } else {
-            // Pro vertikální přímku zkrátíme jen y souřadnici
             this.end = new Point2D(this.end.x, this.end.y - 1);
         }
     }
@@ -55,21 +59,10 @@ public class Line {
      * @return boolean indicating weather this line is horizontal
      */
     public boolean isHorizontal() {
-        return start.x == end.y;
+        return start.y == end.y;
     }
 
-    /**
-     * Returns a new line which points downward
-     *
-     * @return a new oriented line
-     */
-    public Line oriented() {
-        int deltaY = 5;
-        Point2D newStart = new Point2D(this.start.x, this.start.y + deltaY);
-        Point2D newEnd = new Point2D(this.end.x, this.end.y + deltaY);
 
-        return new Line(newStart, newEnd);
-    }
 
     /**
      * Return true if this line intercepts with the given horizontal line
@@ -89,37 +82,18 @@ public class Line {
      */
     public double yIntercept(double y) {
         // if it is vertical
-        if (start.x == end.x) {
-            return start.x; // return x-axe vertical line
+        if (Double.isInfinite(this.k)) {
+            return Math.round(this.q); // Předpokládáme, že q byla nastavena na x-souřadnici pro vertikální linie
         }
 
-        double m = (end.y - start.y) / (end.x - start.x);
+        double m = this.k; // již vypočítáno v calculate()
+        double b = this.q; // již vypočítáno v calculate()
 
-        double b = start.y - m * start.x;
-
-        return (y - b) / m;
+        double xIntercept = (y - b) / m;
+        return Math.round(xIntercept); // Zaokrouhlení na nejbližší celé číslo
     }
 
-    public Point2D intercript(Line other){
-        // Výpočet směrnic obou přímek
-        double m1 = (this.end.y - this.start.y) / (this.end.x - this.start.x);
-        double m2 = (other.end.y - other.start.y) / (other.end.x - other.start.x);
 
-        // Kontrola, zda jsou přímky rovnoběžné (včetně shodných)
-        if (m1 == m2) {
-            return null; // Neexistuje jedinečný průsečík
-        }
-
-        // Výpočet y-odseček obou přímek
-        double b1 = this.start.y - m1 * this.start.x;
-        double b2 = other.start.y - m2 * other.start.x;
-
-        // Výpočet souřadnic průsečíku
-        double x = (b2 - b1) / (m1 - m2);
-        double y = m1 * x + b1;
-
-        return new Point2D(x, y);
-    }
 
     public boolean isInside(Point2D p) {
         final Point2D t = new Point2D(end.x - start.x, end.y - start.y);

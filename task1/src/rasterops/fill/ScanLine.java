@@ -30,14 +30,13 @@ public class ScanLine {
 
         for (Line line : lines) {
             line.calculate();
-            line.truncate();
 
             ymin = Math.min(ymin, Math.min((int) line.start.y, (int) line.end.y));
             ymax = Math.max(ymax, Math.max((int) line.start.y, (int) line.end.y));
         }
 
 
-        for (int y = ymin; y < ymax; y++) {
+        for (int y = ymin; y <= ymax; y++) {
             List<Double> intercepts = new ArrayList<>();
             for (Line line : lines) {
                 if (line.hasYIntercept(y)) {
