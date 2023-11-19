@@ -16,24 +16,21 @@ public class SeedFill4Stack implements SeedFill {
 
         while (!stack.isEmpty()) {
             Point2D p = stack.pop();
-            int c = (int) p.x;
-            int r = (int) p.y;
+            int c = (int) p.getX();
+            int r = (int) p.getY();
 
-            if (c < 0 || c >= img.getWidth() || r < 0 || r >= img.getHeight()) {
-                continue;
-            }
+            if (c > 0 && r > 0 && c < img.getWidth() && r < img.getHeight()) {
+                Optional<Integer> colorOpt = img.getColor(c, r);
+                if (colorOpt.isPresent() && isInArea.test(colorOpt.get())) {
+                    img.setColor(fillColor, c, r);
 
-            Optional<Integer> colorOpt = img.getColor(c, r);
-            if (colorOpt.isPresent() && isInArea.test(colorOpt.get())) {
-                img.setColor(fillColor, c, r);
+                    stack.push(new Point2D(c + 1, r));
+                    stack.push(new Point2D(c - 1, r));
+                    stack.push(new Point2D(c, r + 1));
+                    stack.push(new Point2D(c, r - 1));
 
-                // Přidání sousedních pixelů do zásobníku
-                stack.push(new Point2D(c + 1, r));
-                stack.push(new Point2D(c - 1, r));
-                stack.push(new Point2D(c, r + 1));
-                stack.push(new Point2D(c, r - 1));
+                }
             }
         }
-
     }
 }

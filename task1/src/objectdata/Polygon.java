@@ -11,6 +11,7 @@ public class Polygon implements Polygoner {
 
     ArrayList<Point2D> listPoints;
 
+    boolean drawed;
 
     public Polygon() {
         this.listPoints = new ArrayList<Point2D>();
@@ -22,9 +23,6 @@ public class Polygon implements Polygoner {
 
     public void addPoint(Point2D point) {
         this.listPoints.add(point);
-        if (this.listPoints.size() > 1) {
-
-        }
     }
 
     public void setPoint(int index, Point2D point) {
@@ -63,6 +61,7 @@ public class Polygon implements Polygoner {
      */
     @Override
     public void drawCircle(Raster raster, double h, double k, double r, int gap, int segments, int color) {
+        drawed = true;
         Point2D[] points = new Point2D[segments];
 
         // generate points on circle
@@ -73,7 +72,38 @@ public class Polygon implements Polygoner {
             points[i] = new Point2D(x, y);
         }
 
+        listPoints.clear();
+        for (Point2D point : points) {
+            listPoints.add(point);
+        }
+
         drawPolygon(raster, gap, color, color);
+    }
+
+    public void drawCircle(Raster raster, double h, double k, double rx, double ry, int gap, int segments, int color) {
+        drawed = true;
+        Point2D[] points = new Point2D[segments];
+
+        // generate points on circle
+        for (int i = 0; i < segments; i++) {
+            double angle = Math.toRadians(i * (360.0 / segments));
+            double x = h + rx * Math.cos(angle);
+            double y = k + ry * Math.sin(angle);
+            points[i] = new Point2D(x, y);
+        }
+
+        listPoints.clear();
+        for (Point2D point : points) {
+            listPoints.add(point);
+        }
+
+        drawPolygon(raster, gap, color, color);
+    }
+
+    public void updateCircle(Raster raster,int gap, int color){
+        if (drawed){
+            drawPolygon(raster, gap, color, color);
+        }
     }
 
     /**
@@ -90,7 +120,7 @@ public class Polygon implements Polygoner {
         for (int i = 0; i < listPoints.size(); i++) {
             Point2D currentPoint = listPoints.get(i);
             Point2D nextPoint = listPoints.get((i + 1) % listPoints.size());
-            linerTrivial.drawLine(raster, currentPoint.x, currentPoint.y, nextPoint.x, nextPoint.y, gap, i != listPoints.size() - 2 && i != listPoints.size() - 1 ? colorPolygon : colorEndPolygon);
+            linerTrivial.drawLine(raster, currentPoint.getX(), currentPoint.getY(), nextPoint.getX(), nextPoint.getY(), gap, i != listPoints.size() - 2 && i != listPoints.size() - 1 ? colorPolygon : colorEndPolygon);
         }
     }
 

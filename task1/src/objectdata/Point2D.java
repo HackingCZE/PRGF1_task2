@@ -2,9 +2,25 @@ package objectdata;
 
 public class Point2D
 {
-    final public double x;
+    private double x;
 
-    final public double y;
+    private double y;
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 
     public Point2D(double x1, double y1){
         this.x = x1;

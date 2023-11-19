@@ -1,5 +1,6 @@
 package rasterops.fill;
 
+import objectdata.Point2D;
 import objectdata.Polygon;
 import objectdata.Line;
 import rasterdata.Raster;
@@ -11,8 +12,24 @@ import java.util.Collections;
 import java.util.List;
 
 public class ScanLine {
-    public void fill(Polygon polygon, Raster raster, int fillColor) {
 
+    public boolean pattern(Point2D point) {
+        double patternX = point.getX() % 10;
+        double patternY = point.getY() % 10;
+
+        return (patternX == patternY);
+    }
+    public void fill(Raster img, ArrayList<Point2D> points, int fillColor, boolean isPattern){
+        Polygon pol = new Polygon();
+        for (int i =0; i< points.size();i++){
+            pol.addPoint(points.get(i));
+        }
+
+        fill(img, pol,fillColor,isPattern);
+    }
+    public void fill(Raster img, Polygon polygon, int fillColor, boolean isPattern) {
+
+        if (polygon.getListPoints().size() < 2) return;
         // 1. Create a list of lines
         // 2. Remove horizontal lines from the list
         // 3. Orient the lines
@@ -26,31 +43,41 @@ public class ScanLine {
 
         List<Line> lines = getNonHorizontalLines(polygon);
 
-        int ymin = Integer.MAX_VALUE, ymax = Integer.MIN_VALUE;
+
+        double ymin = Integer.MAX_VALUE, ymax = Integer.MIN_VALUE;
 
         for (Line line : lines) {
-            line.calculate();
-
-            ymin = Math.min(ymin, Math.min((int) line.start.y, (int) line.end.y));
-            ymax = Math.max(ymax, Math.max((int) line.start.y, (int) line.end.y));
+            ymin = Math.min(ymin, Math.min((int) line.getStart().getY(), (int) line.getEnd().getY()));
+            ymax = Math.max(ymax, Math.max((int) line.getStart().getY(), (int) line.getEnd().getY()));
         }
 
 
-        for (int y = ymin; y <= ymax; y++) {
-            List<Double> intercepts = new ArrayList<>();
+        for (int y = (int) ymin; y < ymax; y++) {
+
+            List<Double> intersections = new ArrayList<>();
+
             for (Line line : lines) {
                 if (line.hasYIntercept(y)) {
-                    intercepts.add(line.yIntercept(y));
+                    intersections.add(line.yIntercept(y));
                 }
             }
-            Collections.sort(intercepts);
-            for (int i = 0; i < intercepts.size() - 1; i += 2) {
-                int startX = (int) Math.round(intercepts.get(i));
-                int endX = (int) Math.round(intercepts.get(i + 1));
-                for (int x = startX; x <= endX; x++) {
-                    raster.setColor(fillColor, x, y);
+
+            Collections.sort(intersections);
+
+            for (int i = intersections.size() - 1; i > 0; i -= 2) {
+                for (int x = (intersections.get(i - 1)).intValue(); x <= (intersections.get(i)).intValue(); x++) {
+                    if (isPattern)
+                    {
+                        if (pattern(new Point2D(x,y))){
+                            img.setColor(fillColor, x, y);
+                        }
+                    }
+                    else {
+                        img.setColor(fillColor, x, y);
+                    }
                 }
             }
+
         }
 
     }
@@ -59,7 +86,7 @@ public class ScanLine {
         List<Line> result = new ArrayList<>();
         for (Line line : polygon.getLines()) {
             if (!line.isHorizontal()) {
-                result.add(line.swap());
+                result.add(line);
             }
         }
         return result;
